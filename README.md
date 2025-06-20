@@ -13,7 +13,10 @@ We propose building an advanced machine learning-powered pricing prediction plat
 
 Our platform can cater to individual buyers and sellers, as well as businesses like dealerships, online car marketplaces, and automotive financing companies.
 
-![Alt text](.\public\poster.png)
+
+<div style="display: flex;">
+  <img src="./public/poster.png" alt="Image 1" width="100%" />
+</div>
 
 ### Key Features:
 
