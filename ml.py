@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-import joblib
 from random_forest import RandomForestRegressor
 import os
+import joblib
+import time
 
 def main(args):
     print("Loading dataset ...")
@@ -28,14 +29,20 @@ def main(args):
         n_jobs=args.n_jobs,
     )
 
-    
     # Train
     print('Training model ...')
+    train_start = time.time()
     rf.fit(X_train, y_train)
+    train_end = time.time()
+    training_time = train_end - train_start
 
     # Predict
     print('Predicting...')
+    infer_start = time.time()
     predictions = rf.predict(X_test)
+    infer_end = time.time()
+    total_infer_time = infer_end - infer_start
+    avg_infer_time = total_infer_time / len(X_test)
 
     # Evaluate
     mae = mean_absolute_error(y_test, predictions)
@@ -49,7 +56,26 @@ def main(args):
     os.makedirs('model', exist_ok=True)
     joblib.dump(rf, 'model/random_forest_model.joblib')
     print('Model saved!')
-    
+
+    # Log hyperparameters and results to CSV
+    log_path = 'results.csv'
+    log_exists = os.path.exists(log_path)
+    log_data = {
+        'n_estimators': args.n,
+        'max_depth': args.max_depth,
+        'min_samples_split': args.min_samples_split,
+        'max_features': args.max_features,
+        'n_jobs': args.n_jobs,
+        'r2_score': r2_score_value,
+        'mae': mae,
+        'training_time': training_time,
+        'avg_inference_time': avg_infer_time
+    }
+    log_df = pd.DataFrame([log_data])
+    if log_exists:
+        log_df.to_csv(log_path, mode='a', header=False, index=False)
+    else:
+        log_df.to_csv(log_path, mode='w', header=True, index=False)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ Description:
 import numpy as np
 import pandas as pd
 from sklearn.utils import resample
-from joblib import Parallel, delayed
+from multiprocessing import Pool, cpu_count
 from regression_tree import RegressionTree
 
 
@@ -74,21 +74,18 @@ class RandomForestRegressor:
         - X: the training features
         - y: the target variable
         """
-        
         self.trees = []
         n_features = X.shape[1]
-        
         # Determine the number of features to consider for each split
         if self.max_features is None:
             max_features = n_features
         else:
             max_features = min(self.max_features, n_features)
-        
-        # Train trees in parallel
-        self.trees = Parallel(n_jobs=self.n_jobs)(
-            delayed(self._train_tree)(X, y, max_features)
-            for _ in range(self.n_estimators)
-        )
+            
+        n_jobs = self.n_jobs if self.n_jobs != -1 else cpu_count()
+        with Pool(processes=n_jobs) as pool:
+            results = [pool.apply_async(self._train_tree, args=(X, y, max_features)) for _ in range(self.n_estimators)]
+            self.trees = [r.get() for r in results]
     
     def predict(self, X):
         """
